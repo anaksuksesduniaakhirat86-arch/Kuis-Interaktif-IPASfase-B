@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petualangan Menyusun Siklus Hidup Makhluk Hidup</title>
+<style>
+  :root{
+    --green:#3F9142;
+    --green-dark:#234B32;
+    --green-light:#7CC576;
+    --sky:#4FA8D8;
+    --sky-light:#DFF2FB;
+    --yellow:#FFC93C;
+    --yellow-dark:#E8A93C;
+    --cream:#FDF8ED;
+    --brown:#8A5A34;
+    --white:#FFFFFF;
+    --red:#E4572E;
+    --red-light:#FBE3DB;
+    --green-fb:#E4F5E1;
+    --ink:#2B3B2F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, #FFFBEF 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, #EAF7EA 0%, transparent 45%),
+      var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 12px 40px;
+  }
+  .app{width:100%;max-width:660px;}
+
+  /* ===== HEADER ===== */
+  .top{
+    background:linear-gradient(180deg,var(--sky) 0%, var(--sky) 60%, var(--sky-light) 100%);
+    border-radius:26px;
+    padding:18px 20px 26px;
+    color:var(--white);
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 6px 0 #3688B5;
+  }
+  .top::after{
+    content:"";
+    position:absolute;
+    left:-10%;right:-10%;bottom:-2px;height:34px;
+    background:var(--green-light);
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    opacity:.55;
+  }
+  .top h1{margin:0 0 4px;font-size:1.3rem;line-height:1.25;text-shadow:0 2px 0 rgba(0,0,0,.08);}
+  .top p.sub{margin:0;font-size:.85rem;opacity:.95;}
+  .top-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;position:relative;z-index:2;}
+  .progress-wrap{flex:1;margin-right:10px;}
+  .progress-label{font-size:.8rem;font-weight:bold;margin-bottom:4px;}
+  .progress-track{background:rgba(255,255,255,.4);border-radius:20px;height:14px;overflow:hidden;border:2px solid rgba(255,255,255,.6);}
+  .progress-fill{height:100%;background:var(--yellow);border-radius:20px;transition:width .4s ease;}
+  .score-badge{background:var(--yellow);color:var(--green-dark);font-weight:bold;padding:8px 14px;border-radius:20px;white-space:nowrap;font-size:.9rem;box-shadow:0 3px 0 var(--yellow-dark);}
+
+  /* ===== CARD ===== */
+  .card{background:var(--white);border-radius:28px 28px 28px 8px;margin-top:16px;padding:20px;box-shadow:0 6px 0 rgba(35,75,50,.13);animation:pop .35s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .q-type{display:inline-block;background:var(--green-fb);color:var(--green-dark);font-size:.72rem;font-weight:bold;padding:4px 10px;border-radius:14px;margin-bottom:8px;}
+  .q-title{margin:0 0 8px;font-size:1.1rem;color:var(--green-dark);}
+  .q-instruction{background:#FFF9E6;border:2px dashed var(--yellow-dark);border-radius:16px;padding:10px 14px;font-size:.86rem;margin-bottom:16px;color:#5A4A1E;}
+  .q-instruction b{color:var(--brown);}
+
+  /* ===== GENERIC RIGHT/WRONG (works on any element) ===== */
+  .correct-pos{border-color:var(--green) !important;background:var(--green-fb) !important;}
+  .wrong-pos{border-color:var(--red) !important;background:var(--red-light) !important;}
+  .selected-mc{border-color:var(--yellow-dark) !important;background:#FFF7E0 !important;}
+
+  /* ===== ORDER (vertical list) ===== */
+  .order-list{display:flex;flex-direction:column;gap:10px;}
+  .order-item{display:flex;align-items:center;gap:10px;background:var(--cream);border:3px solid #E7DDC4;border-radius:18px;padding:8px 10px;transition:border-color .2s ease, background .2s ease;}
+  .order-item.dragging{opacity:.5;}
+  .order-item .num{width:26px;height:26px;flex:none;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:bold;}
+  .order-item .icon-box{width:52px;height:52px;flex:none;background:var(--white);border-radius:14px;padding:5px;box-shadow:inset 0 0 0 2px #EFE7D0;}
+  .order-item .icon-box svg{width:100%;height:100%;}
+  .order-item .name{flex:1;font-weight:bold;font-size:.92rem;color:var(--green-dark);}
+  .order-item .movebtns{display:flex;flex-direction:column;gap:3px;}
+  .movebtn{width:30px;height:26px;border:none;border-radius:8px;background:var(--sky);color:#fff;font-size:.8rem;font-weight:bold;cursor:pointer;box-shadow:0 2px 0 #3688B5;}
+  .movebtn:disabled{background:#CBD8DC;box-shadow:none;cursor:not-allowed;}
+  .movebtn:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+  .order-item[draggable="true"]{cursor:grab;}
+
+  /* ===== FILL ===== */
+  .sequence-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+  .chip{display:flex;flex-direction:column;align-items:center;gap:4px;width:76px;}
+  .chip .box{width:60px;height:60px;background:var(--cream);border:3px solid #E7DDC4;border-radius:16px;padding:6px;}
+  .chip .box svg{width:100%;height:100%;}
+  .chip .box.blank{display:flex;align-items:center;justify-content:center;border:3px dashed var(--sky);background:var(--sky-light);font-size:1.5rem;color:var(--sky);font-weight:bold;}
+  .chip .box.blank.filled{border-style:solid;background:var(--white);}
+  .chip .label{font-size:.66rem;text-align:center;font-weight:bold;color:var(--green-dark);}
+  .arrow{font-size:1.25rem;color:var(--green);font-weight:bold;}
+  .options-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;}
+  .option-btn{display:flex;align-items:center;gap:8px;background:var(--white);border:3px solid #E7DDC4;border-radius:16px;padding:8px 10px;cursor:pointer;font-family:inherit;font-weight:bold;font-size:.84rem;color:var(--green-dark);}
+  .option-btn:hover:not(:disabled){border-color:var(--sky);}
+  .option-btn.selected{border-color:var(--yellow-dark);background:#FFF7E0;}
+  .option-btn:disabled{cursor:not-allowed;opacity:.6;}
+
+  /* ===== SHARED ICON SIZES ===== */
+  .icon-sm{width:34px;height:34px;flex:none;display:inline-block;}
+  .icon-sm svg{width:100%;height:100%;display:block;}
+  .icon-sm-lg{width:56px;height:56px;display:inline-block;}
+  .icon-sm-lg svg{width:100%;height:100%;display:block;}
+  .mini{width:32px;height:32px;flex:none;display:inline-block;}
+  .mini svg{width:100%;height:100%;display:block;}
+  .miniarrow{font-size:.9rem;color:var(--green);}
+  .choice-seq{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+
+  /* ===== CHOICE CARD (dipakai choose-style & bagan-fix) ===== */
+  .choice-card{display:flex;align-items:center;gap:12px;background:var(--cream);border:3px solid #E7DDC4;border-radius:18px;padding:10px 12px;margin-bottom:10px;cursor:pointer;}
+  .choice-card:hover{border-color:var(--sky);}
+  .choice-card.selected{border-color:var(--yellow-dark);background:#FFF7E0;}
+  .choice-card .radio{width:20px;height:20px;flex:none;border:3px solid #C9BE9C;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .choice-card.selected .radio{border-color:var(--yellow-dark);}
+  .choice-card.selected .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--yellow-dark);}
+
+  /* ===== FEEDBACK ===== */
+  .feedback{margin-top:16px;border-radius:18px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;animation:pop .3s ease;}
+  .feedback.ok{background:var(--green-fb);border:2px solid var(--green);}
+  .feedback.bad{background:var(--red-light);border:2px solid var(--red);}
+  .feedback .fico{font-size:1.6rem;line-height:1;}
+  .feedback .ftext b{display:block;margin-bottom:4px;font-size:.95rem;}
+  .feedback.ok .ftext b{color:var(--green-dark);}
+  .feedback.bad .ftext b{color:#9C3616;}
+  .feedback .ftext p{margin:0;font-size:.84rem;color:var(--ink);}
+
+  /* ===== MC ===== */
+  .mc-list{display:flex;flex-direction:column;gap:9px;}
+  .mc-option{display:flex;align-items:center;gap:10px;width:100%;background:white;border:3px solid #E7DDC4;border-radius:16px;padding:10px 12px;cursor:pointer;font-family:inherit;font-weight:bold;font-size:.88rem;color:var(--green-dark);text-align:left;}
+  .mc-option:disabled{cursor:not-allowed;}
+  .mc-option:hover:not(:disabled){border-color:var(--sky);}
+  .letter-badge{width:26px;height:26px;flex:none;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:bold;}
+  .mc-content{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+
+  /* ===== TRUE/FALSE ===== */
+  .tf-row{display:flex;gap:10px;margin-top:4px;}
+  .tf-btn{flex:1;padding:14px 10px;font-size:.95rem;font-weight:bold;border-radius:18px;border:3px solid #E7DDC4;background:white;color:var(--green-dark);cursor:pointer;font-family:inherit;}
+  .tf-btn:disabled{cursor:not-allowed;}
+  .tf-btn:hover:not(:disabled){border-color:var(--sky);}
+
+  /* ===== MATCH ===== */
+  .match-grid{display:flex;gap:16px;flex-wrap:wrap;}
+  .match-left,.match-right{flex:1;min-width:150px;display:flex;flex-direction:column;gap:8px;}
+  .match-slot{display:flex;align-items:center;gap:8px;background:var(--cream);border:3px solid #E7DDC4;border-radius:14px;padding:7px 10px;cursor:pointer;}
+  .slot-text{font-weight:bold;color:var(--green-dark);font-size:.82rem;}
+  .match-chip{background:white;border:3px solid #E7DDC4;border-radius:14px;padding:9px 12px;font-weight:bold;cursor:pointer;font-family:inherit;font-size:.82rem;color:var(--green-dark);text-align:left;}
+  .match-chip:hover:not(:disabled){border-color:var(--sky);}
+  .match-chip:disabled{opacity:.35;cursor:not-allowed;}
+
+  /* ===== ARROW ===== */
+  .arrow-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .arrow-box{display:flex;flex-direction:column;align-items:center;gap:4px;width:68px;font-size:.66rem;font-weight:bold;text-align:center;color:var(--green-dark);}
+  .arrow-toggle{border:none;background:var(--sky);color:white;font-size:1.05rem;font-weight:bold;border-radius:10px;padding:6px 8px;cursor:pointer;box-shadow:0 2px 0 #3688B5;}
+  .wrap-arrow{display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--cream);border:2px dashed var(--brown);border-radius:16px;padding:12px;font-size:.8rem;font-weight:bold;color:var(--brown);text-align:center;}
+  .wrap-arrow button{border:none;background:var(--yellow);color:var(--green-dark);font-weight:bold;border-radius:12px;padding:8px 14px;cursor:pointer;font-size:.82rem;box-shadow:0 3px 0 var(--yellow-dark);}
+
+  /* ===== SIMULATE ===== */
+  .animal-pick{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .animal-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:white;border:3px solid #E7DDC4;border-radius:18px;padding:12px 16px;cursor:pointer;font-family:inherit;font-weight:bold;color:var(--green-dark);}
+  .animal-btn:hover{border-color:var(--sky);}
+
+  /* ===== FOOTER BUTTONS ===== */
+  .nav-row{display:flex;gap:10px;margin-top:18px;}
+  .btn{flex:1;border:none;border-radius:18px;padding:13px 10px;font-family:inherit;font-weight:bold;font-size:.9rem;cursor:pointer;}
+  .btn:active:not(:disabled){transform:translateY(2px);}
+  .btn-back{background:var(--white);color:var(--green-dark);border:3px solid var(--green-light);box-shadow:0 4px 0 #CFE8CF;}
+  .btn-check{background:var(--yellow);color:var(--green-dark);box-shadow:0 4px 0 var(--yellow-dark);flex:2;}
+  .btn-next{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-dark);flex:2;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen{width:100%;max-width:660px;display:none;}
+  .result-card{background:var(--white);border-radius:28px;padding:26px 22px;text-align:center;box-shadow:0 6px 0 rgba(35,75,50,.13);animation:pop .4s ease;}
+  .result-card .big-icon{font-size:3rem;margin-bottom:6px;}
+  .result-card h2{margin:0 0 6px;color:var(--green-dark);}
+  .result-card .msg{font-size:.95rem;margin-bottom:18px;color:var(--ink);}
+  .stat-row{display:flex;gap:10px;justify-content:center;margin-bottom:18px;flex-wrap:wrap;}
+  .stat{background:var(--cream);border-radius:16px;padding:12px 18px;min-width:90px;}
+  .stat .num{font-size:1.4rem;font-weight:bold;color:var(--green-dark);}
+  .stat .lbl{font-size:.7rem;color:#6B7A6F;font-weight:bold;}
+  .score100{background:linear-gradient(135deg,var(--yellow),var(--yellow-dark));color:var(--green-dark);border-radius:20px;padding:16px;font-size:1.6rem;font-weight:bold;margin-bottom:16px;}
+  .score100 span{display:block;font-size:.72rem;font-weight:bold;margin-top:2px;}
+  .summary-box{text-align:left;background:var(--green-fb);border-radius:16px;padding:14px 16px;font-size:.84rem;margin-bottom:18px;color:var(--green-dark);}
+  .summary-box b{display:block;margin-bottom:6px;color:var(--green-dark);}
+  .btn-repeat{background:var(--sky);color:#fff;border:none;border-radius:18px;padding:14px 20px;font-family:inherit;font-weight:bold;font-size:.95rem;cursor:pointer;box-shadow:0 4px 0 #3688B5;}
+  .btn-repeat:active{transform:translateY(2px);}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="app" id="quiz-app">
+  <div class="top">
+    <h1>🌿 Petualangan Menyusun Siklus Hidup 🦋</h1>
+    <p class="sub">Ayo bantu makhluk hidup menyusun bagan siklus hidupnya!</p>
+    <div class="top-row">
+      <div class="progress-wrap">
+        <div class="progress-label" id="progress-label">Soal 1 dari 15</div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:6.6%"></div></div>
+      </div>
+      <div class="score-badge" id="score-badge">⭐ 0 poin</div>
+    </div>
+  </div>
+
+  <div class="card" id="quiz-card"></div>
+
+  <div class="nav-row">
+    <button class="btn btn-back" id="btn-back">⬅ Kembali</button>
+    <button class="btn btn-check" id="btn-check">✅ Periksa Jawaban</button>
+    <button class="btn btn-next hidden" id="btn-next">Soal Berikutnya ➜</button>
+  </div>
+</div>
+
+<div id="result-screen">
+  <div class="result-card">
+    <div class="big-icon" id="result-icon">🌟</div>
+    <h2>Kuis Selesai!</h2>
+    <p class="msg" id="result-msg"></p>
+    <div class="score100" id="score100">0 <span>dari skala 100</span></div>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="stat-correct">0</div><div class="lbl">JAWABAN BENAR</div></div>
+      <div class="stat"><div class="num" id="stat-wrong">0</div><div class="lbl">JAWABAN SALAH</div></div>
+      <div class="stat"><div class="num" id="stat-points">0</div><div class="lbl">POIN MENTAH / 150</div></div>
+    </div>
+    <div class="summary-box">
+      <b>📖 Yang sudah kamu pelajari:</b>
+      Siklus hidup kupu-kupu, katak, belalang, ayam, dan nyamuk (metamorfosis sempurna & tidak sempurna), serta tahapan pertumbuhan tumbuhan dari biji hingga dewasa.
+    </div>
+    <button class="btn-repeat" id="btn-repeat">🔄 Ulangi Kuis</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ============ ICON LIBRARY (SVG) ============ */
+  const STAGES = {
+    telur:{ name:'Telur', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='55' rx='26' ry='32' fill='#FFF6D8' stroke='#E8C766' stroke-width='4'/><circle cx='40' cy='45' r='3' fill='#E8C766'/><circle cx='58' cy='60' r='2.5' fill='#E8C766'/><circle cx='45' cy='68' r='2' fill='#E8C766'/></svg>` },
+    larva:{ name:'Larva/Ulat', svg:`<svg viewBox='0 0 100 100'><g fill='#8BC34A' stroke='#5C8A2B' stroke-width='3'><circle cx='20' cy='65' r='12'/><circle cx='38' cy='60' r='13'/><circle cx='57' cy='58' r='13'/><circle cx='75' cy='60' r='12'/></g><circle cx='80' cy='55' r='3' fill='#3E5C1D'/><path d='M18 50 L10 38' stroke='#5C8A2B' stroke-width='3' stroke-linecap='round'/><path d='M25 48 L20 35' stroke='#5C8A2B' stroke-width='3' stroke-linecap='round'/></svg>` },
+    pupa:{ name:'Pupa (Kepompong)', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='55' rx='20' ry='34' fill='#C89B6A' stroke='#8A6238' stroke-width='4'/><path d='M32 35 Q50 45 68 35 M30 50 Q50 58 70 50 M32 65 Q50 73 68 65 M35 80 Q50 86 65 80' stroke='#8A6238' stroke-width='2.5' fill='none'/></svg>` },
+    kupu:{ name:'Kupu-kupu Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='30' cy='35' rx='22' ry='16' fill='#4FA8D8' transform='rotate(-20 30 35)'/><ellipse cx='70' cy='35' rx='22' ry='16' fill='#4FA8D8' transform='rotate(20 70 35)'/><ellipse cx='32' cy='65' rx='18' ry='14' fill='#FFC93C' transform='rotate(-15 32 65)'/><ellipse cx='68' cy='65' rx='18' ry='14' fill='#FFC93C' transform='rotate(15 68 65)'/><rect x='47' y='25' width='6' height='55' rx='3' fill='#3E5C1D'/><circle cx='50' cy='25' r='6' fill='#3E5C1D'/><path d='M46 20 L38 8 M54 20 L62 8' stroke='#3E5C1D' stroke-width='2.5' stroke-linecap='round'/></svg>` },
+    berudu:{ name:'Berudu/Kecebong', svg:`<svg viewBox='0 0 100 100'><ellipse cx='42' cy='50' rx='20' ry='18' fill='#5C8A2B'/><circle cx='35' cy='43' r='3' fill='#1F3A0F'/><path d='M60 50 Q90 40 92 55 Q90 68 60 58 Z' fill='#5C8A2B'/></svg>` },
+    katakMuda:{ name:'Katak Muda', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='55' rx='28' ry='22' fill='#6FBF4A'/><circle cx='35' cy='35' r='10' fill='#6FBF4A'/><circle cx='65' cy='35' r='10' fill='#6FBF4A'/><circle cx='35' cy='32' r='4' fill='#22331A'/><circle cx='65' cy='32' r='4' fill='#22331A'/><path d='M60 70 Q70 82 78 72' stroke='#5C8A2B' stroke-width='3' fill='none' stroke-linecap='round'/><ellipse cx='25' cy='70' rx='8' ry='5' fill='#6FBF4A'/><ellipse cx='75' cy='70' rx='8' ry='5' fill='#6FBF4A'/></svg>` },
+    katakDewasa:{ name:'Katak Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='58' rx='32' ry='24' fill='#3F9142'/><circle cx='32' cy='32' r='12' fill='#3F9142'/><circle cx='68' cy='32' r='12' fill='#3F9142'/><circle cx='32' cy='28' r='5' fill='#1B2E14'/><circle cx='68' cy='28' r='5' fill='#1B2E14'/><path d='M15 62 Q5 75 15 85 Q28 88 30 75' fill='#3F9142'/><path d='M85 62 Q95 75 85 85 Q72 88 70 75' fill='#3F9142'/><ellipse cx='50' cy='65' rx='14' ry='6' fill='#EAF6E5'/></svg>` },
+    nimfa:{ name:'Nimfa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='55' cy='55' rx='24' ry='14' fill='#8BC34A'/><circle cx='30' cy='50' r='9' fill='#8BC34A'/><path d='M25 45 L15 32 M33 45 L30 30' stroke='#5C8A2B' stroke-width='2.5' stroke-linecap='round'/><path d='M65 62 L75 82 M55 65 L60 85' stroke='#5C8A2B' stroke-width='3' stroke-linecap='round'/></svg>` },
+    belalangMuda:{ name:'Belalang Muda', svg:`<svg viewBox='0 0 100 100'><ellipse cx='55' cy='55' rx='30' ry='16' fill='#7CB342'/><circle cx='26' cy='48' r='10' fill='#7CB342'/><path d='M20 42 L8 26 M30 42 L28 24' stroke='#4F7A20' stroke-width='2.5' stroke-linecap='round'/><ellipse cx='55' cy='50' rx='14' ry='6' fill='#A5D66B'/><path d='M70 65 L82 88 M58 68 L65 90' stroke='#4F7A20' stroke-width='3.5' stroke-linecap='round'/></svg>` },
+    belalangDewasa:{ name:'Belalang Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='52' cy='52' rx='36' ry='16' fill='#5C8A2B' transform='rotate(-5 52 52)'/><circle cx='20' cy='45' r='10' fill='#5C8A2B'/><path d='M14 38 L2 20 M24 38 L22 18' stroke='#3E5C1D' stroke-width='2.5' stroke-linecap='round'/><ellipse cx='55' cy='46' rx='20' ry='7' fill='#8BC34A'/><path d='M75 62 Q95 68 98 55' stroke='#3E5C1D' stroke-width='3.5' fill='none' stroke-linecap='round'/><path d='M60 66 L75 92 M75 68 L88 92' stroke='#3E5C1D' stroke-width='4' stroke-linecap='round'/></svg>` },
+    biji:{ name:'Biji', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='60' rx='18' ry='26' fill='#8A5A34' stroke='#5C3A1E' stroke-width='3'/><path d='M50 40 Q60 45 55 55' stroke='#5C3A1E' stroke-width='2' fill='none'/><ellipse cx='50' cy='88' rx='30' ry='6' fill='#C7A46B' opacity='0.5'/></svg>` },
+    kecambah:{ name:'Perkecambahan', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='85' rx='34' ry='8' fill='#C7A46B'/><path d='M50 85 L50 55' stroke='#4C8A2E' stroke-width='5' stroke-linecap='round'/><path d='M50 60 Q30 55 28 40 Q45 42 50 60' fill='#7CC576'/><path d='M50 65 Q70 60 74 46 Q56 48 50 65' fill='#7CC576'/><ellipse cx='50' cy='88' rx='10' ry='5' fill='#8A5A34'/></svg>` },
+    tumbuhanMuda:{ name:'Tumbuhan Muda', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='90' rx='36' ry='7' fill='#C7A46B'/><path d='M50 90 L50 40' stroke='#3F9142' stroke-width='6' stroke-linecap='round'/><path d='M50 55 Q25 45 22 25 Q45 30 50 55' fill='#7CC576'/><path d='M50 60 Q75 50 78 30 Q55 35 50 60' fill='#7CC576'/><path d='M50 45 Q35 35 35 20 Q48 25 50 45' fill='#8BC34A'/></svg>` },
+    tumbuhanDewasa:{ name:'Tumbuhan Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='92' rx='38' ry='6' fill='#C7A46B'/><path d='M50 92 L50 30' stroke='#3F9142' stroke-width='7' stroke-linecap='round'/><path d='M50 60 Q15 50 12 25 Q42 28 50 60' fill='#3F9142'/><path d='M50 65 Q85 55 88 28 Q58 32 50 65' fill='#3F9142'/><path d='M50 40 Q30 25 32 8 Q48 15 50 40' fill='#7CC576'/><path d='M50 45 Q70 30 68 10 Q52 18 50 45' fill='#7CC576'/><circle cx='50' cy='20' r='8' fill='#FFC93C'/></svg>` },
+    jentik:{ name:'Larva/Jentik-jentik', svg:`<svg viewBox='0 0 100 100'><rect x='8' y='58' width='84' height='30' rx='8' fill='#BFE3F5' opacity='0.55'/><path d='M18 55 Q28 40 38 55 Q48 70 58 55 Q68 40 78 55' stroke='#2E7D32' stroke-width='5' fill='none' stroke-linecap='round'/><circle cx='80' cy='53' r='4' fill='#1B4B1E'/></svg>` },
+    nyamukDewasa:{ name:'Nyamuk Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='55' cy='55' rx='14' ry='8' fill='#37474F' transform='rotate(20 55 55)'/><path d='M50 45 L30 20 M55 40 L50 10' stroke='#37474F' stroke-width='2' stroke-linecap='round'/><path d='M45 50 Q20 40 10 55 Q25 50 45 58' fill='#B0BEC5' opacity='0.85'/><path d='M50 60 Q25 55 12 70 Q28 62 52 66' fill='#B0BEC5' opacity='0.85'/><path d='M60 62 L75 85 M65 65 L85 82 M68 58 L90 68' stroke='#37474F' stroke-width='2' stroke-linecap='round'/></svg>` },
+    anakAyam:{ name:'Anak Ayam', svg:`<svg viewBox='0 0 100 100'><circle cx='50' cy='60' r='26' fill='#FFD54F'/><circle cx='50' cy='32' r='16' fill='#FFD54F'/><path d='M50 32 L62 36 L50 40 Z' fill='#F57C00'/><circle cx='44' cy='30' r='2.5' fill='#4E342E'/><path d='M38 55 Q30 60 34 68' stroke='#F57C00' stroke-width='3' fill='none' stroke-linecap='round'/></svg>` },
+    ayamMuda:{ name:'Ayam Muda', svg:`<svg viewBox='0 0 100 100'><ellipse cx='52' cy='62' rx='30' ry='24' fill='#F2C879'/><circle cx='35' cy='34' r='14' fill='#F2C879'/><path d='M35 22 Q40 14 46 22' stroke='#E4572E' stroke-width='4' fill='none' stroke-linecap='round'/><path d='M35 34 L20 38 L35 42 Z' fill='#F57C00'/><circle cx='30' cy='31' r='2.5' fill='#4E342E'/><path d='M70 55 Q88 50 86 68 Q72 70 70 55' fill='#E0AD5F'/></svg>` },
+    ayamDewasa:{ name:'Ayam Dewasa', svg:`<svg viewBox='0 0 100 100'><ellipse cx='55' cy='60' rx='32' ry='26' fill='#D2691E'/><circle cx='34' cy='32' r='15' fill='#D2691E'/><path d='M30 18 Q35 6 42 18 Q46 10 48 20' fill='#E4572E'/><path d='M34 32 L16 37 L34 44 Z' fill='#F57C00'/><circle cx='29' cy='29' r='2.5' fill='#2B1A0E'/><path d='M75 50 Q98 40 95 65 Q78 72 75 50' fill='#8A5A34'/><path d='M20 75 L15 88 M30 78 L28 90' stroke='#F57C00' stroke-width='4' stroke-linecap='round'/></svg>` }
+  };
+
+  /* ============ QUESTION DATA (15 soal, 8 jenis) ============ */
+  const QUESTIONS = [
+    { id:1, type:'mc', title:'Urutan Siklus Hidup Kupu-kupu',
+      instruction:'Pilih urutan siklus hidup kupu-kupu yang benar.',
+      options:[
+        {seq:['telur','pupa','larva','kupu']},
+        {seq:['larva','telur','pupa','kupu']},
+        {seq:['telur','larva','pupa','kupu']},
+        {seq:['pupa','telur','kupu','larva']}
+      ], correctIndex:2,
+      explanation:'Urutan yang benar adalah Telur → Larva/Ulat → Pupa → Kupu-kupu dewasa.' },
+
+    { id:2, type:'tf', title:'Benar atau Salah: Siklus Hidup Katak',
+      instruction:'Baca pernyataan berikut, lalu tentukan Benar atau Salah.',
+      statement:'Berudu/kecebong merupakan salah satu tahapan dalam siklus hidup katak sebelum menjadi katak muda.',
+      icons:['berudu','katakMuda'], correct:true,
+      explanation:'Pernyataan ini benar. Setelah menetas dari telur, katak melewati tahap Berudu/Kecebong sebelum menjadi Katak muda.' },
+
+    { id:3, type:'order', title:'Menyusun Pertumbuhan Tumbuhan',
+      instruction:'Susun kartu gambar menjadi urutan pertumbuhan tumbuhan yang benar.',
+      correct:['biji','kecambah','tumbuhanMuda','tumbuhanDewasa'],
+      explanation:'Tumbuhan tumbuh dari Biji → Perkecambahan → Tumbuhan muda → Tumbuhan dewasa.' },
+
+    { id:4, type:'order', title:'Menyusun Siklus Hidup Belalang',
+      instruction:'Susun kartu gambar tahapan siklus hidup belalang dari awal hingga dewasa.',
+      correct:['telur','nimfa','belalangMuda','belalangDewasa'],
+      explanation:'Belalang berkembang dari Telur → Nimfa → Belalang muda → Belalang dewasa.' },
+
+    { id:5, type:'mc', title:'Tahapan yang Hilang',
+      instruction:'Perhatikan bagan berikut, lalu pilih tahapan yang tepat untuk mengisi bagian yang kosong.',
+      context:{ sequence:['telur','larva',null,'kupu'] },
+      options:[ {icon:'nimfa'}, {icon:'pupa'}, {icon:'berudu'}, {icon:'biji'} ], correctIndex:1,
+      explanation:'Tahapan yang hilang adalah Pupa, sebelum Kupu-kupu menjadi dewasa.' },
+
+    { id:6, type:'fill', title:'Melengkapi Bagan Siklus Hidup Katak',
+      instruction:'Pilih atau seret kartu yang tepat ke kotak kosong.',
+      sequence:['telur','berudu',null,'katakDewasa'], correct:'katakMuda',
+      options:['katakMuda','pupa','larva','biji'],
+      explanation:'Tahapan yang tepat adalah Katak muda, sebelum menjadi Katak dewasa.' },
+
+    { id:7, type:'fill', title:'Melengkapi Bagan Pertumbuhan Tumbuhan',
+      instruction:'Pilih gambar yang tepat untuk mengisi kotak kosong.',
+      sequence:['biji','kecambah',null,'tumbuhanDewasa'], correct:'tumbuhanMuda',
+      options:['tumbuhanMuda','telur','katakMuda','belalangDewasa'],
+      explanation:'Tahapan yang tepat adalah Tumbuhan muda, sebelum menjadi Tumbuhan dewasa.' },
+
+    { id:8, type:'match', title:'Memasangkan Gambar dan Tahapan Siklus Hidup Ayam',
+      instruction:'Klik sebuah label di kanan, lalu klik gambar di kiri untuk memasangkannya. Klik kotak yang sudah terisi untuk membatalkan pasangan.',
+      pairs:[
+        {key:'telur', icon:'telur', label:'Telur'},
+        {key:'anakAyam', icon:'anakAyam', label:'Anak Ayam'},
+        {key:'ayamMuda', icon:'ayamMuda', label:'Ayam Muda'},
+        {key:'ayamDewasa', icon:'ayamDewasa', label:'Ayam Dewasa'}
+      ],
+      explanation:'Siklus hidup ayam yang benar: Telur → Anak ayam → Ayam muda → Ayam dewasa.' },
+
+    { id:9, type:'tf', title:'Benar atau Salah: Siklus Hidup Kupu-kupu',
+      instruction:'Baca pernyataan berikut, lalu tentukan Benar atau Salah.',
+      statement:'Setelah menjadi pupa, kupu-kupu berkembang menjadi larva/ulat sebelum menjadi kupu-kupu dewasa.',
+      icons:['pupa','kupu'], correct:false,
+      explanation:'Pernyataan ini salah. Setelah menjadi Pupa, kupu-kupu langsung berkembang menjadi Kupu-kupu dewasa.' },
+
+    { id:10, type:'mc', title:'Membandingkan Siklus Hidup',
+      instruction:'Pilih jawaban yang tepat.',
+      questionText:'Hewan yang mengalami tahapan telur → larva/jentik-jentik → pupa → dewasa adalah ....',
+      options:[ {text:'Ayam', emoji:'🐔'}, {text:'Kucing', emoji:'🐱'}, {text:'Nyamuk', emoji:'🦟'}, {text:'Kambing', emoji:'🐐'} ],
+      correctIndex:2,
+      explanation:'Nyamuk mengalami metamorfosis sempurna: Telur → Larva/jentik-jentik → Pupa → Nyamuk dewasa.' },
+
+    { id:11, type:'order', title:'Menyusun Kartu Siklus Hidup Kupu-kupu',
+      instruction:'Susun kartu gambar berikut hingga membentuk siklus hidup kupu-kupu yang benar.',
+      correct:['telur','larva','pupa','kupu'],
+      explanation:'Urutan yang benar adalah Telur → Larva/Ulat → Pupa → Kupu-kupu dewasa.' },
+
+    { id:12, type:'fill', title:'Melengkapi Bagan Siklus Hidup Nyamuk',
+      instruction:'Pilih atau seret kartu gambar yang tepat.',
+      sequence:['telur','jentik',null,'nyamukDewasa'], correct:'pupa',
+      options:['nimfa','pupa','berudu','tumbuhanMuda'],
+      explanation:'Tahapan yang tepat adalah Pupa, sebelum menjadi Nyamuk dewasa.' },
+
+    { id:13, type:'baganfix', title:'Memilih dan Memperbaiki Bagan',
+      instruction:'Pilih bagan siklus hidup katak yang benar, lalu tekan tombol Periksa.',
+      correct:['telur','berudu','katakMuda','katakDewasa'],
+      wrong:['telur','katakMuda','berudu','katakDewasa'],
+      explanation:'Urutan yang benar adalah Telur → Berudu/Kecebong → Katak muda → Katak dewasa.' },
+
+    { id:14, type:'arrow', title:'Menentukan Arah Panah',
+      instruction:'Tekan setiap panah untuk mengubah arahnya, sampai semua panah menunjukkan alur siklus hidup kupu-kupu yang benar (dan kembali menghasilkan telur baru).',
+      stages:['telur','larva','pupa','kupu'],
+      explanation:'Panah yang benar mengalir Telur → Larva/Ulat → Pupa → Kupu-kupu dewasa, lalu kembali menghasilkan Telur baru.' },
+
+    { id:15, type:'simulate', title:'Praktik Membuat Simulasi Bagan',
+      instruction:'Pilih satu hewan, lalu susun kartu gambar sesuai tahapan siklus hidupnya yang benar menggunakan tombol ▲▼.',
+      animals:{
+        kupu:{ name:'Kupu-kupu', icon:'kupu', correct:['telur','larva','pupa','kupu'] },
+        katak:{ name:'Katak', icon:'katakDewasa', correct:['telur','berudu','katakMuda','katakDewasa'] },
+        ayam:{ name:'Ayam', icon:'ayamDewasa', correct:['telur','anakAyam','ayamMuda','ayamDewasa'] }
+      },
+      explanation:'Setiap hewan memiliki urutan siklus hidup yang khas, namun semuanya dimulai dari telur.' }
+  ];
+
+  const TOTAL = QUESTIONS.length;
+  const TYPE_LABEL = { mc:'🔤 Pilihan Ganda', tf:'⚖️ Benar / Salah', order:'🔀 Menyusun Urutan', fill:'🧩 Melengkapi Bagan', match:'🔗 Memasangkan', baganfix:'🛠️ Memilih & Memperbaiki', arrow:'➡️ Arah Panah', simulate:'🎬 Simulasi Bagan' };
+
+  /* ============ STATE ============ */
+  let current = 0;
+  let score = 0;
+  let answered = new Array(TOTAL).fill(false);
+  let correctFlags = new Array(TOTAL).fill(false);
+  let states = new Array(TOTAL).fill(null);
+  let dragSrcPos = null;
+
+  /* ============ HELPERS ============ */
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+  function shuffledDifferent(correctArr){
+    if(correctArr.length<2) return correctArr.slice();
+    let a = shuffle(correctArr), tries=0;
+    while(a.join(',')===correctArr.join(',') && tries<10){ a = shuffle(correctArr); tries++; }
+    return a;
+  }
+  function arraysEqual(a,b){ return a.length===b.length && a.every((v,i)=>v===b[i]); }
+  function iconHTML(key){ const s=STAGES[key]; return s?s.svg:''; }
+
+  function initState(qIdx){
+    if(states[qIdx]) return states[qIdx];
+    const q = QUESTIONS[qIdx];
+    let st = {};
+    if(q.type==='order'){
+      st.order = q.initialOrder ? q.initialOrder.slice() : shuffledDifferent(q.correct);
+    } else if(q.type==='fill'){
+      st.selected = null; st.options = shuffle(q.options);
+    } else if(q.type==='mc'){
+      st.selected = null;
+    } else if(q.type==='tf'){
+      st.selected = null;
+    } else if(q.type==='match'){
+      st.allLabels = shuffle(q.pairs.map(p=>({id:p.key, text:p.label})));
+      st.assignments = new Array(q.pairs.length).fill(null);
+      st.pending = null;
+    } else if(q.type==='baganfix'){
+      st.phase = 'pick'; st.picked = null; st.fixOrder = null;
+    } else if(q.type==='arrow'){
+      st.dirs = new Array(q.stages.length).fill('backward');
+    } else if(q.type==='simulate'){
+      st.animal = null; st.order = null;
+    }
+    states[qIdx] = st;
+    return st;
+  }
+
+  /* ============ RENDER PARTS ============ */
+  const cardEl = document.getElementById('quiz-card');
+  const backBtn = document.getElementById('btn-back');
+  const checkBtn = document.getElementById('btn-check');
+  const nextBtn = document.getElementById('btn-next');
+
+  function renderOrderBody(q, st, qIdx){
+    let html = `<div class="order-list">`;
+    st.order.forEach((key,pos)=>{
+      let posClass = '';
+      if(answered[qIdx]) posClass = (key===q.correct[pos]) ? 'correct-pos' : 'wrong-pos';
+      html += `
+        <div class="order-item ${posClass}" draggable="${!answered[qIdx]}" data-pos="${pos}">
+          <div class="num">${pos+1}</div>
+          <div class="icon-box">${iconHTML(key)}</div>
+          <div class="name">${STAGES[key].name}</div>
+          <div class="movebtns">
+            <button class="movebtn" data-dir="-1" data-pos="${pos}" ${answered[qIdx]||pos===0?'disabled':''}>▲</button>
+            <button class="movebtn" data-dir="1" data-pos="${pos}" ${answered[qIdx]||pos===st.order.length-1?'disabled':''}>▼</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function renderFillBody(q, st, qIdx){
+    let html = `<div class="sequence-row">`;
+    q.sequence.forEach((key,i)=>{
+      if(i>0) html += `<div class="arrow">➜</div>`;
+      if(key===null){
+        const filled = st.selected!==null;
+        let extra = '';
+        if(answered[qIdx]) extra = (st.selected===q.correct) ? 'style="border-color:#3F9142;background:#E4F5E1;"' : 'style="border-color:#E4572E;background:#FBE3DB;"';
+        html += `<div class="chip"><div class="box blank ${filled?'filled':''}" ${extra}>${filled?iconHTML(st.selected):'?'}</div><div class="label">${filled?STAGES[st.selected].name:'...'}</div></div>`;
+      } else {
+        html += `<div class="chip"><div class="box">${iconHTML(key)}</div><div class="label">${STAGES[key].name}</div></div>`;
+      }
+    });
+    html += `</div><div class="options-grid">`;
+    st.options.forEach(key=>{
+      const isSel = st.selected===key;
+      html += `<button class="option-btn ${isSel?'selected':''}" data-key="${key}" ${answered[qIdx]?'disabled':''}>
+        <span class="icon-sm">${iconHTML(key)}</span> ${STAGES[key].name}
+      </button>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function renderMCBody(q, st, qIdx){
+    let html = '';
+    if(q.questionText) html += `<p style="font-weight:bold;margin:0 0 12px;color:var(--green-dark);">${q.questionText}</p>`;
+    if(q.context && q.context.sequence){
+      html += `<div class="sequence-row">`;
+      q.context.sequence.forEach((key,i)=>{
+        if(i>0) html += `<div class="arrow">➜</div>`;
+        if(key===null) html += `<div class="chip"><div class="box blank">?</div><div class="label">...</div></div>`;
+        else html += `<div class="chip"><div class="box">${iconHTML(key)}</div><div class="label">${STAGES[key].name}</div></div>`;
+      });
+      html += `</div>`;
+    }
+    html += `<div class="mc-list">`;
+    q.options.forEach((opt,i)=>{
+      const letter = String.fromCharCode(65+i);
+      const isSel = st.selected===i;
+      let cls = '';
+      if(answered[qIdx]){ if(i===q.correctIndex) cls='correct-pos'; else if(isSel) cls='wrong-pos'; }
+      else if(isSel) cls='selected-mc';
+      let content;
+      if(opt.seq){
+        content = `<div class="choice-seq">` + opt.seq.map((k,idx)=>(idx>0?`<span class="miniarrow">➜</span>`:'')+`<span class="mini">${iconHTML(k)}</span>`).join('') + `</div>`;
+      } else if(opt.icon){
+        content = `<span class="icon-sm">${iconHTML(opt.icon)}</span><span>${STAGES[opt.icon].name}</span>`;
+      } else {
+        content = `<span style="font-size:1.3rem;">${opt.emoji||''}</span><span>${opt.text}</span>`;
+      }
+      html += `<button class="mc-option ${cls}" data-idx="${i}" ${answered[qIdx]?'disabled':''}>
+        <span class="letter-badge">${letter}</span><span class="mc-content">${content}</span>
+      </button>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function renderTFBody(q, st, qIdx){
+    let html = `<p style="font-weight:bold;font-size:1rem;margin:0 0 12px;color:var(--ink);">${q.statement}</p>`;
+    if(q.icons){
+      html += `<div class="sequence-row">` + q.icons.map(k=>`<div class="chip"><div class="box">${iconHTML(k)}</div><div class="label">${STAGES[k].name}</div></div>`).join('<div class="arrow">➜</div>') + `</div>`;
+    }
+    html += `<div class="tf-row">`;
+    [['Benar',true],['Salah',false]].forEach(([txt,val])=>{
+      const isSel = st.selected===val;
+      let cls = '';
+      if(answered[qIdx]){ if(val===q.correct) cls='correct-pos'; else if(isSel) cls='wrong-pos'; }
+      else if(isSel) cls='selected-mc';
+      html += `<button class="tf-btn ${cls}" data-val="${val}" ${answered[qIdx]?'disabled':''}>${val?'✅':'❌'} ${txt}</button>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function renderMatchBody(q, st, qIdx){
+    let html = `<div class="match-grid"><div class="match-left">`;
+    q.pairs.forEach((p,i)=>{
+      const assignedId = st.assignments[i];
+      let text = '... (kosong)';
+      let cls = '';
+      if(assignedId!==null){
+        const lbl = st.allLabels.find(l=>l.id===assignedId);
+        text = lbl ? lbl.text : '...';
+        if(answered[qIdx]) cls = (assignedId===p.key) ? 'correct-pos' : 'wrong-pos';
+      }
+      html += `<div class="match-slot ${cls}" data-slot="${i}">
+        <span class="icon-sm">${iconHTML(p.icon)}</span><span class="slot-text">${text}</span>
+      </div>`;
+    });
+    html += `</div><div class="match-right">`;
+    st.allLabels.forEach(l=>{
+      const used = st.assignments.includes(l.id);
+      const isPending = st.pending===l.id;
+      html += `<button class="match-chip ${isPending?'selected-mc':''}" data-label="${l.id}" ${answered[qIdx]||used?'disabled':''}>${l.text}</button>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }
+
+  function renderBaganFixBody(q, st, qIdx){
+    let html = '';
+    if(st.phase==='pick'){
+      html += `<div>`;
+      const cards = [ {key:'A', seq:q.correct}, {key:'B', seq:q.wrong} ];
+      cards.forEach((c,i)=>{
+        const isSel = st.picked===i;
+        html += `<div class="choice-card ${isSel?'selected':''}" data-idx="${i}">
+          <div class="radio"></div>
+          <div style="flex:1;">
+            <div style="font-weight:bold;margin-bottom:6px;color:var(--green-dark);">Bagan ${c.key}</div>
+            <div class="choice-seq">${c.seq.map((k,idx)=>(idx>0?'<span class="miniarrow">➜</span>':'')+`<span class="mini">${iconHTML(k)}</span>`).join('')}</div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div class="q-instruction" style="border-color:var(--red);background:#FFF3EE;color:#9C3616;"><b>Belum tepat.</b> Yuk susun ulang kartunya menjadi urutan yang benar!</div>`;
+      html += `<div class="order-list">`;
+      st.fixOrder.forEach((key,pos)=>{
+        let posClass = '';
+        if(answered[qIdx]) posClass = (key===q.correct[pos]) ? 'correct-pos' : 'wrong-pos';
+        html += `
+          <div class="order-item ${posClass}" data-pos="${pos}">
+            <div class="num">${pos+1}</div>
+            <div class="icon-box">${iconHTML(key)}</div>
+            <div class="name">${STAGES[key].name}</div>
+            <div class="movebtns">
+              <button class="movebtn fixmove" data-dir="-1" data-pos="${pos}" ${answered[qIdx]||pos===0?'disabled':''}>▲</button>
+              <button class="movebtn fixmove" data-dir="1" data-pos="${pos}" ${answered[qIdx]||pos===st.fixOrder.length-1?'disabled':''}>▼</button>
+            </div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    return html;
+  }
+
+  function renderArrowBody(q, st, qIdx){
+    let html = `<div class="arrow-diagram">`;
+    q.stages.forEach((key,i)=>{
+      html += `<div class="arrow-box"><span class="icon-sm">${iconHTML(key)}</span><span>${STAGES[key].name}</span></div>`;
+      if(i<q.stages.length-1){
+        const dir = st.dirs[i];
+        let cls = answered[qIdx] ? (dir==='forward'?'correct-pos':'wrong-pos') : '';
+        html += `<button class="arrow-toggle ${cls}" data-idx="${i}" ${answered[qIdx]?'disabled':''}>${dir==='forward'?'➜':'⟵'}</button>`;
+      }
+    });
+    html += `</div>`;
+    const lastIdx = q.stages.length-1;
+    const wrapDir = st.dirs[lastIdx];
+    let wrapCls = answered[qIdx] ? (wrapDir==='forward'?'correct-pos':'wrong-pos') : '';
+    html += `<div class="wrap-arrow ${wrapCls}">
+      <span>Apakah ${STAGES[q.stages[lastIdx]].name} kembali menghasilkan ${STAGES[q.stages[0]].name} baru?</span>
+      <button class="arrow-toggle" data-idx="${lastIdx}" ${answered[qIdx]?'disabled':''}>${wrapDir==='forward'?'🔁 Ya, kembali ke Telur':'🚫 Arah salah'}</button>
+    </div>`;
+    return html;
+  }
+
+  function renderSimulateBody(q, st, qIdx){
+    let html = '';
+    if(!st.animal){
+      html += `<div class="animal-pick">`;
+      Object.keys(q.animals).forEach(key=>{
+        const a = q.animals[key];
+        html += `<button class="animal-btn" data-animal="${key}"><span class="icon-sm-lg">${iconHTML(a.icon)}</span><span>${a.name}</span></button>`;
+      });
+      html += `</div>`;
+    } else {
+      const a = q.animals[st.animal];
+      html += `<div class="q-instruction" style="border-color:var(--sky);background:var(--sky-light);color:#1B4B63;">Menyusun bagan untuk: <b>${a.name}</b></div>`;
+      html += `<div class="order-list">`;
+      st.order.forEach((key,pos)=>{
+        let posClass = '';
+        if(answered[qIdx]) posClass = (key===a.correct[pos]) ? 'correct-pos' : 'wrong-pos';
+        html += `
+          <div class="order-item ${posClass}" data-pos="${pos}">
+            <div class="num">${pos+1}</div>
+            <div class="icon-box">${iconHTML(key)}</div>
+            <div class="name">${STAGES[key].name}</div>
+            <div class="movebtns">
+              <button class="movebtn simmove" data-dir="-1" data-pos="${pos}" ${answered[qIdx]||pos===0?'disabled':''}>▲</button>
+              <button class="movebtn simmove" data-dir="1" data-pos="${pos}" ${answered[qIdx]||pos===st.order.length-1?'disabled':''}>▼</button>
+            </div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    return html;
+  }
+
+  /* ============ MAIN RENDER ============ */
+  function renderQuestion(qIdx){
+    const q = QUESTIONS[qIdx];
+    const st = initState(qIdx);
+    let html = '';
+    html += `<div class="q-type">${TYPE_LABEL[q.type]}</div>`;
+    html += `<h2 class="q-title">${q.title}</h2>`;
+    html += `<div class="q-instruction"><b>Petunjuk:</b> ${q.instruction}</div>`;
+
+    if(q.type==='order') html += renderOrderBody(q, st, qIdx);
+    else if(q.type==='fill') html += renderFillBody(q, st, qIdx);
+    else if(q.type==='mc') html += renderMCBody(q, st, qIdx);
+    else if(q.type==='tf') html += renderTFBody(q, st, qIdx);
+    else if(q.type==='match') html += renderMatchBody(q, st, qIdx);
+    else if(q.type==='baganfix') html += renderBaganFixBody(q, st, qIdx);
+    else if(q.type==='arrow') html += renderArrowBody(q, st, qIdx);
+    else if(q.type==='simulate') html += renderSimulateBody(q, st, qIdx);
+
+    if(answered[qIdx]){
+      const ok = correctFlags[qIdx];
+      let extraNote = '';
+      if(q.type==='match') extraNote = ` (Skor: ${st.lastPoints}/10 — ${st.lastCorrectCount}/${q.pairs.length} pasangan benar)`;
+      if(q.type==='simulate') extraNote = ` (Skor: ${st.lastPoints}/10)`;
+      html += `<div class="feedback ${ok?'ok':'bad'}">
+        <div class="fico">${ok?'✅':'❌'}</div>
+        <div class="ftext">
+          <b>${ok?'Hebat! Jawabanmu benar!':'Belum tepat, yuk coba pahami lagi!'}${extraNote}</b>
+          <p>${q.explanation}</p>
+        </div>
+      </div>`;
+    }
+
+    cardEl.innerHTML = html;
+    attachHandlers(qIdx);
+    updateHeader();
+    updateNavButtons(qIdx);
+  }
+
+  function attachHandlers(qIdx){
+    if(answered[qIdx]) return;
+    const q = QUESTIONS[qIdx];
+    const st = states[qIdx];
+
+    if(q.type==='order'){
+      cardEl.querySelectorAll('.movebtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const pos=parseInt(btn.dataset.pos,10), dir=parseInt(btn.dataset.dir,10), t=pos+dir;
+          if(t<0||t>=st.order.length) return;
+          [st.order[pos], st.order[t]] = [st.order[t], st.order[pos]];
+          renderQuestion(qIdx);
+        });
+      });
+      cardEl.querySelectorAll('.order-item').forEach(item=>{
+        item.addEventListener('dragstart',(e)=>{ dragSrcPos=parseInt(item.dataset.pos,10); item.classList.add('dragging'); e.dataTransfer.setData('text/plain', dragSrcPos); });
+        item.addEventListener('dragend', ()=> item.classList.remove('dragging'));
+        item.addEventListener('dragover',(e)=> e.preventDefault());
+        item.addEventListener('drop',(e)=>{
+          e.preventDefault();
+          const targetPos = parseInt(item.dataset.pos,10);
+          if(dragSrcPos===null || dragSrcPos===targetPos) return;
+          [st.order[dragSrcPos], st.order[targetPos]] = [st.order[targetPos], st.order[dragSrcPos]];
+          dragSrcPos = null;
+          renderQuestion(qIdx);
+        });
+      });
+    }
+
+    if(q.type==='fill'){
+      cardEl.querySelectorAll('.option-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ st.selected = btn.dataset.key; renderQuestion(qIdx); });
+      });
+    }
+
+    if(q.type==='mc'){
+      cardEl.querySelectorAll('.mc-option').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ st.selected = parseInt(btn.dataset.idx,10); renderQuestion(qIdx); });
+      });
+    }
+
+    if(q.type==='tf'){
+      cardEl.querySelectorAll('.tf-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{ st.selected = (btn.dataset.val==='true'); renderQuestion(qIdx); });
+      });
+    }
+
+    if(q.type==='match'){
+      cardEl.querySelectorAll('.match-chip').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.dataset.label;
+          st.pending = (st.pending===id) ? null : id;
+          renderQuestion(qIdx);
+        });
+      });
+      cardEl.querySelectorAll('.match-slot').forEach(slot=>{
+        slot.addEventListener('click', ()=>{
+          const idx = parseInt(slot.dataset.slot,10);
+          if(st.pending!==null){ st.assignments[idx] = st.pending; st.pending = null; }
+          else if(st.assignments[idx]!==null){ st.assignments[idx] = null; }
+          renderQuestion(qIdx);
+        });
+      });
+    }
+
+    if(q.type==='baganfix'){
+      if(st.phase==='pick'){
+        cardEl.querySelectorAll('.choice-card').forEach(card=>{
+          card.addEventListener('click', ()=>{ st.picked = parseInt(card.dataset.idx,10); renderQuestion(qIdx); });
+        });
+      } else {
+        cardEl.querySelectorAll('.fixmove').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const pos=parseInt(btn.dataset.pos,10), dir=parseInt(btn.dataset.dir,10), t=pos+dir;
+            if(t<0||t>=st.fixOrder.length) return;
+            [st.fixOrder[pos], st.fixOrder[t]] = [st.fixOrder[t], st.fixOrder[pos]];
+            renderQuestion(qIdx);
+          });
+        });
+      }
+    }
+
+    if(q.type==='arrow'){
+      cardEl.querySelectorAll('.arrow-toggle').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const idx = parseInt(btn.dataset.idx,10);
+          st.dirs[idx] = (st.dirs[idx]==='forward') ? 'backward' : 'forward';
+          renderQuestion(qIdx);
+        });
+      });
+    }
+
+    if(q.type==='simulate'){
+      if(!st.animal){
+        cardEl.querySelectorAll('.animal-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            st.animal = btn.dataset.animal;
+            st.order = shuffledDifferent(q.animals[st.animal].correct);
+            renderQuestion(qIdx);
+          });
+        });
+      } else {
+        cardEl.querySelectorAll('.simmove').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const pos=parseInt(btn.dataset.pos,10), dir=parseInt(btn.dataset.dir,10), t=pos+dir;
+            if(t<0||t>=st.order.length) return;
+            [st.order[pos], st.order[t]] = [st.order[t], st.order[pos]];
+            renderQuestion(qIdx);
+          });
+        });
+      }
+    }
+  }
+
+  /* ============ CHECK / SCORE ============ */
+  function checkAnswer(qIdx){
+    if(answered[qIdx]) return;
+    const q = QUESTIONS[qIdx];
+    const st = states[qIdx];
+    let correct = false;
+
+    if(q.type==='order'){
+      correct = arraysEqual(st.order, q.correct);
+      answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+    }
+    else if(q.type==='fill'){
+      if(st.selected===null) return;
+      correct = st.selected===q.correct;
+      answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+    }
+    else if(q.type==='mc'){
+      if(st.selected===null) return;
+      correct = st.selected===q.correctIndex;
+      answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+    }
+    else if(q.type==='tf'){
+      if(st.selected===null) return;
+      correct = st.selected===q.correct;
+      answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+    }
+    else if(q.type==='match'){
+      if(!st.assignments.every(a=>a!==null)) return;
+      let cc = 0;
+      q.pairs.forEach((p,i)=>{ if(st.assignments[i]===p.key) cc++; });
+      const points = Math.round((cc/q.pairs.length)*10);
+      st.lastPoints = points; st.lastCorrectCount = cc;
+      correct = cc===q.pairs.length;
+      answered[qIdx]=true; correctFlags[qIdx]=correct; score+=points;
+    }
+    else if(q.type==='baganfix'){
+      if(st.phase==='pick'){
+        if(st.picked===null) return;
+        if(st.picked===0){ answered[qIdx]=true; correctFlags[qIdx]=true; score+=10; }
+        else { st.phase='fix'; st.fixOrder=q.wrong.slice(); renderQuestion(qIdx); return; }
+      } else {
+        correct = arraysEqual(st.fixOrder, q.correct);
+        answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+      }
+    }
+    else if(q.type==='arrow'){
+      correct = st.dirs.every(d=>d==='forward');
+      answered[qIdx]=true; correctFlags[qIdx]=correct; if(correct) score+=10;
+    }
+    else if(q.type==='simulate'){
+      if(!st.animal) return;
+      const a = q.animals[st.animal];
+      let cc = 0;
+      st.order.forEach((k,i)=>{ if(k===a.correct[i]) cc++; });
+      const points = Math.round((cc/a.correct.length)*10);
+      st.lastPoints = points;
+      correct = cc===a.correct.length;
+      answered[qIdx]=true; correctFlags[qIdx]=correct; score+=points;
+    }
+
+    renderQuestion(qIdx);
+  }
+
+  /* ============ NAV / HEADER ============ */
+  function updateHeader(){
+    document.getElementById('progress-label').textContent = `Soal ${current+1} dari ${TOTAL}`;
+    document.getElementById('progress-fill').style.width = (((current+1)/TOTAL)*100)+'%';
+    document.getElementById('score-badge').textContent = `⭐ ${score} poin`;
+  }
+
+  function computeCanCheck(qIdx){
+    const q = QUESTIONS[qIdx], st = states[qIdx];
+    switch(q.type){
+      case 'fill': case 'mc': case 'tf': return st.selected!==null;
+      case 'match': return st.assignments.every(a=>a!==null);
+      case 'baganfix': return st.phase==='pick' ? st.picked!==null : true;
+      case 'simulate': return st.animal!==null;
+      default: return true;
+    }
+  }
+
+  function updateNavButtons(qIdx){
+    backBtn.disabled = (current===0);
+    if(answered[qIdx]){
+      checkBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      nextBtn.textContent = (current===TOTAL-1) ? '🏁 Lihat Hasil' : 'Soal Berikutnya ➜';
+    } else {
+      checkBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+      checkBtn.disabled = !computeCanCheck(qIdx);
+      const q = QUESTIONS[qIdx], st = states[qIdx];
+      checkBtn.textContent = (q.type==='baganfix' && st.phase==='fix') ? '✅ Periksa Perbaikan' : '✅ Periksa Jawaban';
+    }
+  }
+
+  backBtn.addEventListener('click', ()=>{ if(current>0){ current--; renderQuestion(current); } });
+  checkBtn.addEventListener('click', ()=> checkAnswer(current));
+  nextBtn.addEventListener('click', ()=>{
+    if(current<TOTAL-1){ current++; renderQuestion(current); }
+    else { showResults(); }
+  });
+
+  /* ============ RESULTS ============ */
+  function showResults(){
+    const correctCount = correctFlags.filter(Boolean).length;
+    const wrongCount = TOTAL - correctCount;
+    const final100 = Math.round((score/150)*100);
+
+    let msg, icon;
+    if(final100>=90){ msg='Luar biasa! Kamu Ahli Siklus Hidup sejati! 🏆'; icon='🌟'; }
+    else if(final100>=70){ msg='Kerja bagus! Kamu sudah memahami siklus hidup dengan baik. 👏'; icon='😄'; }
+    else if(final100>=50){ msg='Bagus! Terus berlatih supaya makin jago menyusun bagan ya. 💪'; icon='🙂'; }
+    else { msg='Yuk coba lagi! Kamu pasti bisa menyusun bagan lebih baik lagi. 🌱'; icon='🌤️'; }
+
+    document.getElementById('result-icon').textContent = icon;
+    document.getElementById('result-msg').textContent = msg;
+    document.getElementById('score100').innerHTML = `${final100} <span>dari skala 100</span>`;
+    document.getElementById('stat-correct').textContent = correctCount;
+    document.getElementById('stat-wrong').textContent = wrongCount;
+    document.getElementById('stat-points').textContent = score;
+
+    document.getElementById('quiz-app').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+  }
+
+  document.getElementById('btn-repeat').addEventListener('click', resetQuiz);
+
+  function resetQuiz(){
+    current = 0; score = 0;
+    answered = new Array(TOTAL).fill(false);
+    correctFlags = new Array(TOTAL).fill(false);
+    states = new Array(TOTAL).fill(null);
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('quiz-app').style.display = 'block';
+    renderQuestion(0);
+  }
+
+  /* ============ INIT ============ */
+  renderQuestion(0);
+
+})();
+</script>
+</body>
+</html>
